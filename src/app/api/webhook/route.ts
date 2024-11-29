@@ -5,6 +5,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as line from "@line/bot-sdk";
 import type { QuickReplyItem } from "@line/bot-sdk";
+import type { NotionPage } from "../../types/notionTypes";
+import { getNextPage } from "../../utils/cacheUtils";
+import { formatMessage } from "../../utils/generalUtils";
+import { updateMemorizationStatus } from "../../utils/notionUtils";
 
 // ============================
 // Client Initialization
@@ -42,6 +46,30 @@ const client = new line.messagingApi.MessagingApiClient({
  *    - After providing feedback, the state resets to "NotUnderstood" to display the next word.
  */
 let userState: "NotDisplayed" | "NotUnderstood" | "Understood" = "NotDisplayed";
+
+/**
+ * State variable to track the currently displayed vocabulary word.
+ * 
+ * This variable holds the information about the current word being studied by the user.
+ * It is updated whenever a new word is displayed (e.g., after pressing the "Next" button)
+ * and used to respond appropriately to user interactions.
+ * 
+ * Possible values for the `currentWord` variable:
+ * 
+ * 1. `null` (Initial state)
+ *    - Indicates that no word has been displayed yet.
+ *    - This is the default state when the bot starts a new session or after a reset.
+ * 
+ * 2. `NotionPage` object
+ *    - Represents the current word being displayed to the user, including its associated properties
+ *      (e.g., phrase, meaning, example).
+ *    - This object is updated when a new word is fetched and displayed.
+ * 
+ * Usage:
+ * - If `currentWord` is `null`, the bot sends a default response for unsupported user messages.
+ * - If `currentWord` is set, the bot uses its properties (e.g., `phrase`) to construct meaningful responses.
+ */
+let currentWord: NotionPage | null = null;
 
 // ============================
 // Enums and Constants
@@ -149,45 +177,105 @@ export async function POST(req: NextRequest) {
 
           // Handle unsupported messages
           if (!isValidButtonLabel(userMessage)) {
-            userState = "NotDisplayed"; // Reset state to initial
-            await client.replyMessage({
-              replyToken: event.replyToken,
-              messages: [
-                {
-                  type: "text",
-                  text: 'The message you sent is not supported. Please press the "Next" button to fetch the next word.',
-                  quickReply: { items: [Button.Next] },
-                },
-              ],
-            });
+            console.warn("Unsupported button label received:", userMessage);
+            if (!currentWord) {
+              // No current word, respond with a default unsupported message
+              userState = "NotDisplayed"; // Reset state to initial
+              await client.replyMessage({
+                replyToken: event.replyToken,
+                messages: [
+                  {
+                    type: "text",
+                    text: 'The message you sent is not supported. Please press the "Next" button to fetch the next word.',
+                    quickReply: { items: [Button.Next] },
+                  },
+                ],
+              });
+            } else {
+              // A current word exists, respond with the current word's phrase
+              await client.replyMessage({
+                replyToken: event.replyToken,
+                messages: [
+                  {
+                    type: "text",
+                    text: currentWord.properties.phrase,
+                    quickReply: { items: [Button.Next, Button.Meaning] },
+                  },
+                ],
+              });
+            }
             return; // Stop further processing for this event
           }
 
+          // Log the user's input message
+          console.log("User input received:", userMessage);
+
           // Handle "Next" button press
           if (userMessage === ButtonLabel.Next) {
-            userState = "NotUnderstood"; // Update state
-            await client.replyMessage({
-              replyToken: event.replyToken,
-              messages: [
-                {
-                  type: "text",
-                  text: "Here is the next word! Please select an action.",
-                  quickReply: { items: [Button.Next, Button.Meaning] },
-                },
-              ],
-            });
+            // Ensure chatId exists
+            const chatId = event.source.userId;
+            if (!chatId) {
+              console.error("Chat ID not found. Cannot fetch the next page.");
+              await client.replyMessage({
+                replyToken: event.replyToken,
+                messages: [
+                  {
+                    type: "text",
+                    text: "Unable to process your request. Chat ID not found.",
+                  },
+                ],
+              });
+              return; // Stop further processing
+            }
+
+            // Fetch the next page from the cache and update currentWord
+            currentWord = await getNextPage(client, chatId);
+
+            if (currentWord) {
+              userState = "NotUnderstood"; // Update state
+              await client.replyMessage({
+                replyToken: event.replyToken,
+                messages: [
+                  {
+                    type: "text",
+                    text: currentWord.properties.phrase,
+                    quickReply: { items: [Button.Next, Button.Meaning] },
+                  },
+                ],
+              });
+            } else {
+              // No more pages to fetch
+              currentWord = null; // Clear the currentWord
+              await client.replyMessage({
+                replyToken: event.replyToken,
+                messages: [
+                  {
+                    type: "text",
+                    text: "No more words available. You have completed all the words!",
+                  },
+                ],
+              });
+            }
           }
 
           // Handle "Meaning" button press
           else if (userMessage === ButtonLabel.Meaning) {
-            if (userState === "NotUnderstood") {
+            if (userState === "NotUnderstood" && currentWord) {
               userState = "Understood"; // Update state
               await client.replyMessage({
                 replyToken: event.replyToken,
                 messages: [
                   {
                     type: "text",
-                    text: "The meaning of this word is 'example'.",
+                    text: formatMessage(currentWord.properties),
+                  },
+                  {
+                    type: "text",
+                    text: `Notion URL:\n${currentWord.url || "No URL available"}`,
+                  },
+                  {
+                    type: "text",
+                    text: "Please select an action:",
                     quickReply: {
                       items: [
                         Button.Next,
@@ -212,21 +300,41 @@ export async function POST(req: NextRequest) {
               ButtonLabel.NotAtAll,
             ].includes(userMessage)
           ) {
-            if (userState === "Understood") {
+            if (userState === "Understood" && currentWord) {
               userState = "NotUnderstood"; // Reset state
+
+              let updateSuccessful = false; // Flag to track success or failure
+
+              try {
+                // Update Notion page memorization status
+                await updateMemorizationStatus(currentWord.id, userMessage);
+                console.log(`Notion page "${currentWord.properties.phrase}" updated with memorization status: ${userMessage}`);
+                updateSuccessful = true; // Mark as successful
+              } catch (error) {
+                // Log error for debugging
+                console.error(`Failed to update Notion page ${currentWord.id}:`, error);
+              }
+
+              // Reply to the user based on the update status
+              const replyMessages: line.TextMessage[] = updateSuccessful
+                ? [
+                    {
+                      type: "text",
+                      text: `The button "${userMessage}" was pressed! It has been recorded successfully.`,
+                      quickReply: { items: [Button.Next] },
+                    },
+                  ]
+                : [
+                    {
+                      type: "text",
+                      text: `The button "${userMessage}" was pressed, but the update could not be completed. Please check it in Notion.`,
+                      quickReply: { items: [Button.Next] },
+                    },
+                  ];
+
               await client.replyMessage({
                 replyToken: event.replyToken,
-                messages: [
-                  {
-                    type: "text",
-                    text: `The button '${userMessage}' was pressed! It has been recorded.`,
-                  },
-                  {
-                    type: "text",
-                    text: "Here is the next word! Please select an action.",
-                    quickReply: { items: [Button.Next, Button.Meaning] },
-                  },
-                ],
+                messages: replyMessages,
               });
             }
           }
