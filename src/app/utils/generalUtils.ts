@@ -45,8 +45,8 @@ export function formatMessage(properties: NotionPageProperties): string {
     `- Example:\n${properties.example || "Example not available"}`,
     `- Pronunciation Check:\n${
       properties.pronunciationCheck
-        ? "⚠️ Pay special attention to pronunciation!"
-        : "No special pronunciation issues."
+        ? "⚠️ Issue"
+        : "✅ OK"
     }`,
     `- Category:\n${properties.category.join(", ") || "No category specified."}`,
     `- Last Studied:\n${properties.lastStudied || "Not studied yet."}`,
