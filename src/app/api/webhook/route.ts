@@ -344,14 +344,14 @@ export async function POST(req: NextRequest) {
                 ? [
                     {
                       type: "text",
-                      text: `The button "${userMessage}" was pressed! It has been recorded successfully.`,
+                      text: `✅ The button "${getIconAndLabel(userMessage)}" was pressed!`,
                       quickReply: { items: [Button.Next] },
                     },
                   ]
                 : [
                     {
                       type: "text",
-                      text: `The button "${userMessage}" was pressed, but the update could not be completed. Please check it in Notion.`,
+                      text: `❌ The button "${getIconAndLabel(userMessage)}" was pressed, but the update could not be completed. Please check it in Notion.`,
                       quickReply: { items: [Button.Next] },
                     },
                   ];

@@ -36,6 +36,10 @@ export function getIconAndLabel(label: ButtonLabel): string {
  */
 export function formatMessage(properties: NotionPageProperties): string {
   // Create the formatted message
+  const memorizedLabel = properties.memorized
+    ? getIconAndLabel(properties.memorized as ButtonLabel)
+    : "No progress recorded.";
+
   const message = [
     `- Meaning:\n${properties.meaning || "Meaning not available"}`,
     `- Example:\n${properties.example || "Example not available"}`,
@@ -46,7 +50,7 @@ export function formatMessage(properties: NotionPageProperties): string {
     }`,
     `- Category:\n${properties.category.join(", ") || "No category specified."}`,
     `- Last Studied:\n${properties.lastStudied || "Not studied yet."}`,
-    `- Memorized:\n${properties.memorized || "No progress recorded."}`,
+    `- Memorized:\n${memorizedLabel}`,
     `- URL:\n${properties.url || "No reference URL available."}`,
   ];
 
