@@ -7,7 +7,7 @@ import * as line from "@line/bot-sdk";
 import type { QuickReplyItem } from "@line/bot-sdk";
 import type { NotionPage } from "../../types/notionTypes";
 import { getNextPage } from "../../utils/cacheUtils";
-import { formatMessage } from "../../utils/generalUtils";
+import { getIconAndLabel, formatMessage } from "../../utils/generalUtils";
 import { updateMemorizationStatus } from "../../utils/notionUtils";
 
 // ============================
@@ -103,37 +103,61 @@ export const Button: Record<string, QuickReplyItem> = {
   // The "Next" button allows the user to request the next word in the sequence
   Next: {
     type: "action",
-    action: { type: "message", label: "⏭ " + ButtonLabel.Next, text: ButtonLabel.Next },
+    action: {
+      type: "message",
+      label: getIconAndLabel(ButtonLabel.Next),
+      text: ButtonLabel.Next
+    },
   },
 
   // The "Meaning" button displays the meaning of the current word
   Meaning: {
     type: "action",
-    action: { type: "message", label: "💬 " + ButtonLabel.Meaning, text: ButtonLabel.Meaning },
+    action: {
+      type: "message",
+      label: getIconAndLabel(ButtonLabel.Meaning),
+      text: ButtonLabel.Meaning
+    },
   },
 
   // The "Never Better" button marks the word as fully memorized by the user
   NeverBetter: {
     type: "action",
-    action: { type: "message", label: "❤️ " + ButtonLabel.NeverBetter, text: ButtonLabel.NeverBetter },
+    action: {
+      type: "message",
+      label: getIconAndLabel(ButtonLabel.NeverBetter),
+      text: ButtonLabel.NeverBetter
+    },
   },
 
   // The "Good" button marks the word as moderately memorized
   Good: {
     type: "action",
-    action: { type: "message", label: "👍 " + ButtonLabel.Good, text: ButtonLabel.Good },
+    action: {
+      type: "message",
+      label: getIconAndLabel(ButtonLabel.Good),
+      text: ButtonLabel.Good
+    },
   },
 
   // The "So So" button marks the word as partially memorized
   SoSo: {
     type: "action",
-    action: { type: "message", label: "💦 " + ButtonLabel.SoSo, text: ButtonLabel.SoSo },
+    action: {
+      type: "message",
+      label: getIconAndLabel(ButtonLabel.SoSo),
+      text: ButtonLabel.SoSo
+    },
   },
 
   // The "Not At All" button marks the word as not memorized at all
   NotAtAll: {
     type: "action",
-    action: { type: "message", label: "💣 " + ButtonLabel.NotAtAll, text: ButtonLabel.NotAtAll },
+    action: {
+      type: "message",
+      label: getIconAndLabel(ButtonLabel.NotAtAll),
+      text: ButtonLabel.NotAtAll
+    },
   },
 };
 
