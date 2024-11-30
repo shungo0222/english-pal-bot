@@ -39,6 +39,11 @@ export function formatMessage(properties: NotionPageProperties): string {
   const memorizedLabel = properties.memorized
     ? getIconAndLabel(properties.memorized as ButtonLabel)
     : "No progress recorded.";
+  
+  // Calculate the number of days since last studied
+  const daysSinceLastStudied = properties.lastStudied
+    ? Math.floor((new Date().getTime() - new Date(properties.lastStudied).getTime()) / (1000 * 60 * 60 * 24))
+    : null;
 
   const message = [
     `- Meaning:\n${properties.meaning || "Meaning not available"}`,
@@ -49,7 +54,9 @@ export function formatMessage(properties: NotionPageProperties): string {
         : "✅ OK"
     }`,
     `- Category:\n${properties.category.join(", ") || "No category specified."}`,
-    `- Last Studied:\n${properties.lastStudied || "Not studied yet."}`,
+    `- Last Studied:\n${properties.lastStudied || "Not studied yet."}${
+      daysSinceLastStudied !== null ? `\n(${daysSinceLastStudied} days ago)` : ""
+    }`,
     `- Memorized:\n${memorizedLabel}`,
     `- URL:\n${properties.url || "No reference URL available."}`,
   ];
