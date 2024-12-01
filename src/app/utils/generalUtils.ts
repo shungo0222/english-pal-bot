@@ -1,4 +1,4 @@
-import { ButtonLabel } from "../api/webhook/route";
+import { ButtonLabel } from "../constants/buttons";
 import type { NotionPageProperties } from "../types/notionTypes";
 
 /**
