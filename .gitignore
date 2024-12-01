@@ -39,3 +39,6 @@ gcloud-key.json
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Cache directory for audio files
+public/output/
