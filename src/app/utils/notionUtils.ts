@@ -1,4 +1,5 @@
 import { Client } from "@notionhq/client";
+import { PageObjectResponse } from "@notionhq/client/build/src/api-endpoints";
 import { NotionApiResponse, NotionPage, NotionPageProperties } from "../types/notionTypes";
 
 // Initialize Notion client
@@ -17,22 +18,22 @@ const notion = new Client({
  *                  data returned by the Notion API when querying a database.
  * @returns A structured `NotionPage` object containing the formatted properties.
  */
-function transformNotionPage(rawPage: any): NotionPage {
+function transformNotionPage(rawPage: PageObjectResponse): NotionPage {
   // Extract the properties field from the raw page object
   const properties = rawPage.properties;
 
   // Map the raw properties into the structured NotionPageProperties object
   const transformedProperties: NotionPageProperties = {
-    lastStudied: properties["Last Studied"]?.date?.start || "", // Date of the last study session
-    pronunciationCheck: properties["PronunciationCheck"]?.checkbox || false, // Whether pronunciation has been checked
-    movie: properties["Movie"]?.multi_select?.map((item: any) => item.name) || [], // List of associated movie names
-    url: properties["URL"]?.url || "", // URL string related to the word/phrase
-    category: properties["Category"]?.multi_select?.map((item: any) => item.name) || [], // List of categories (e.g., noun, verb)
-    created: properties["Created"]?.created_time || "", // Page creation date in ISO 8601 format
-    example: properties["Example"]?.rich_text?.[0]?.plain_text || "", // Example sentence in plain text
-    meaning: properties["Meaning"]?.rich_text?.[0]?.plain_text || "", // Meaning of the word/phrase in plain text
-    memorized: properties["Memorized"]?.select?.name || "", // Memorization status (e.g., "Never Better")
-    phrase: properties["Phrase"]?.title?.[0]?.plain_text || "", // The primary phrase or word
+    lastStudied: properties["Last Studied"]?.type === "date" ? properties["Last Studied"].date?.start || "" : "", // Date of the last study session
+    pronunciationCheck: properties["PronunciationCheck"]?.type === "checkbox" ? properties["PronunciationCheck"].checkbox || false : false, // Whether pronunciation has been checked
+    movie: properties["Movie"]?.type === "multi_select" ? properties["Movie"].multi_select?.map((item) => item.name) || [] : [], // List of associated movie names
+    url: properties["URL"]?.type === "url" ? properties["URL"].url || "" : "", // URL string related to the word/phrase
+    category: properties["Category"]?.type === "multi_select" ? properties["Category"].multi_select?.map((item) => item.name) || [] : [], // List of categories (e.g., noun, verb)
+    created: properties["Created"]?.type === "created_time" ? properties["Created"].created_time || "" : "", // Page creation date in ISO 8601 format
+    example: properties["Example"]?.type === "rich_text" ? properties["Example"].rich_text?.[0]?.plain_text || "" : "", // Example sentence in plain text
+    meaning: properties["Meaning"]?.type === "rich_text" ? properties["Meaning"].rich_text?.[0]?.plain_text || "" : "", // Meaning of the word/phrase in plain text
+    memorized: properties["Memorized"]?.type === "select" ? properties["Memorized"].select?.name || "" : "", // Memorization status (e.g., "Never Better")
+    phrase: properties["Phrase"]?.type === "title" ? properties["Phrase"].title?.[0]?.plain_text || "" : "", // The primary phrase or word
   };
 
   // Return the formatted NotionPage object
@@ -75,7 +76,7 @@ export async function getFormattedDatabasePages(startCursor?: string): Promise<N
     });
 
     // Transform raw pages into structured NotionPage objects
-    const formattedPages: NotionPage[] = rawResponse.results.map(transformNotionPage);
+    const formattedPages: NotionPage[] = (rawResponse.results as PageObjectResponse[]).map(transformNotionPage);
 
     return {
       next_cursor: rawResponse.next_cursor || null, // Cursor for the next page
@@ -120,6 +121,7 @@ export async function updateMemorizationStatus(
       },
     });
   } catch (error) {
+    console.error(`Failed to update memorization status for page ${pageId}:`, error);
     throw new Error("Failed to update memorization status.");
   }
 }

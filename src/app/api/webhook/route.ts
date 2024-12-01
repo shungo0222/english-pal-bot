@@ -209,7 +209,7 @@ export async function POST(req: NextRequest) {
               );
 
               // Construct the messages array dynamically based on audio generation result
-              const messages: any[] = [];
+              const messages: (line.TextMessage | line.AudioMessage)[] = [];
 
               // Add the audio message only if the audio file was successfully generated
               if (isAudioGenerated) {
@@ -218,7 +218,7 @@ export async function POST(req: NextRequest) {
                   type: "audio",
                   originalContentUrl: audioUrl,
                   duration: 10000, // Set default duration to 10 seconds
-                });
+                } as line.AudioMessage);
               }
 
               // Add other messages
