@@ -156,6 +156,7 @@ export async function POST(req: NextRequest) {
                   {
                     type: "text",
                     text: "Unable to process your request. Chat ID not found.",
+                    quickReply: { items: [Button.Next] },
                   },
                 ],
               });
@@ -186,6 +187,7 @@ export async function POST(req: NextRequest) {
                   {
                     type: "text",
                     text: "No more words available. You have completed all the words!",
+                    quickReply: { items: [Button.Next] },
                   },
                 ],
               });
@@ -219,6 +221,11 @@ export async function POST(req: NextRequest) {
                   originalContentUrl: audioUrl,
                   duration: 10000, // Set default duration to 10 seconds
                 } as line.AudioMessage);
+              } else {
+                messages.push({
+                  type: "text",
+                  text: "Sorry, the audio file could not be generated.",
+                });
               }
 
               // Add other messages
@@ -250,6 +257,17 @@ export async function POST(req: NextRequest) {
               await client.replyMessage({
                 replyToken: event.replyToken,
                 messages,
+              });
+            } else {
+              await client.replyMessage({
+                replyToken: event.replyToken,
+                messages: [
+                  {
+                    type: "text",
+                    text: "There's something wrong. No more words available.",
+                    quickReply: { items: [Button.Next] },
+                  },
+                ],
               });
             }
           }
@@ -298,6 +316,17 @@ export async function POST(req: NextRequest) {
               await client.replyMessage({
                 replyToken: event.replyToken,
                 messages: replyMessages,
+              });
+            } else {
+              await client.replyMessage({
+                replyToken: event.replyToken,
+                messages: [
+                  {
+                    type: "text",
+                    text: "There's something wrong. No more words available.",
+                    quickReply: { items: [Button.Next] },
+                  },
+                ],
               });
             }
           }
