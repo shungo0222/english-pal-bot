@@ -239,10 +239,6 @@ export async function POST(req: NextRequest) {
                 {
                   type: "text",
                   text: `Notion URL:\n${currentWord.url || "No URL available"}`,
-                },
-                {
-                  type: "text",
-                  text: "Please select an action:",
                   quickReply: {
                     items: [
                       Button.Next,
@@ -252,7 +248,7 @@ export async function POST(req: NextRequest) {
                       Button.NotAtAll,
                     ],
                   },
-                }
+                },
               );
 
               // Send the reply messages
