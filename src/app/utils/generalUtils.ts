@@ -107,7 +107,7 @@ export function formatFlexMessage(page: NotionPage): FlexBubble {
       {
         type: "text",
         text: value || "-",
-        size: "sm",
+        size: "md",
         color: valueColor,
         flex: 3,
         wrap: true,
