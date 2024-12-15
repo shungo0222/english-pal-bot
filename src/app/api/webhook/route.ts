@@ -6,8 +6,8 @@ import { NextRequest, NextResponse } from "next/server";
 import * as line from "@line/bot-sdk";
 import type { NotionPage } from "../../types/notionTypes";
 import { ButtonLabel, Button } from "../../constants/buttons";
-import { getNextPage, generateAudioFileViaApi } from "../../utils/cacheUtils";
-import { getIconAndLabel, formatMessage } from "../../utils/generalUtils";
+import { getNextPage } from "../../utils/cacheUtils"; // Temporarily disabled: generateAudioFileViaApi
+import { getIconAndLabel, formatFlexMessage } from "../../utils/generalUtils";
 import { updateMemorizationStatus } from "../../utils/notionUtils";
 
 // ============================
@@ -199,9 +199,9 @@ export async function POST(req: NextRequest) {
             if (userState === "NotUnderstood" && currentWord) {
               userState = "Understood"; // Update state
 
-              // Generate audio file and check the result
-              const host = req.headers.get("host");
               // TODO: Temporarily disabled
+              // Generate audio file and check the result
+              // const host = req.headers.get("host");
               // const isAudioGenerated = await generateAudioFileViaApi(
               //   process.env.INTERNAL_API_KEY!,
               //   currentWord.properties.phrase,
@@ -212,7 +212,7 @@ export async function POST(req: NextRequest) {
               // );
 
               // Construct the messages array dynamically based on audio generation result
-              const messages: (line.TextMessage | line.AudioMessage)[] = [];
+              const messages: (line.AudioMessage | line.FlexMessage)[] = [];
 
               // TODO: Temporarily commenting out the fallback text message for cases where the audio file generation fails.
               // Add the audio message only if the audio file was successfully generated
@@ -233,12 +233,9 @@ export async function POST(req: NextRequest) {
               // Add other messages
               messages.push(
                 {
-                  type: "text",
-                  text: formatMessage(currentWord.properties),
-                },
-                {
-                  type: "text",
-                  text: `Notion URL:\n${currentWord.url || "No URL available"}`,
+                  type: "flex",
+                  altText: "Study Data: Phrase, Meaning, and Details",
+                  contents: formatFlexMessage(currentWord),
                   quickReply: {
                     items: [
                       Button.Next,
@@ -254,7 +251,7 @@ export async function POST(req: NextRequest) {
               // Send the reply messages
               await client.replyMessage({
                 replyToken: event.replyToken,
-                messages,
+                messages: messages as any,
               });
             } else {
               await client.replyMessage({
