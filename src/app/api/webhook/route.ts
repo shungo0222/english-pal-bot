@@ -201,32 +201,34 @@ export async function POST(req: NextRequest) {
 
               // Generate audio file and check the result
               const host = req.headers.get("host");
-              const isAudioGenerated = await generateAudioFileViaApi(
-                process.env.INTERNAL_API_KEY!,
-                currentWord.properties.phrase,
-                currentWord.id,
-                host!,
-                client,
-                event.source.userId!,
-              );
+              // TODO: Temporarily disabled
+              // const isAudioGenerated = await generateAudioFileViaApi(
+              //   process.env.INTERNAL_API_KEY!,
+              //   currentWord.properties.phrase,
+              //   currentWord.id,
+              //   host!,
+              //   client,
+              //   event.source.userId!,
+              // );
 
               // Construct the messages array dynamically based on audio generation result
               const messages: (line.TextMessage | line.AudioMessage)[] = [];
 
+              // TODO: Temporarily commenting out the fallback text message for cases where the audio file generation fails.
               // Add the audio message only if the audio file was successfully generated
-              if (isAudioGenerated) {
-                const audioUrl = `https://${host}/output/audio-${currentWord.id}.mp3`;
-                messages.push({
-                  type: "audio",
-                  originalContentUrl: audioUrl,
-                  duration: 10000, // Set default duration to 10 seconds
-                } as line.AudioMessage);
-              } else {
-                messages.push({
-                  type: "text",
-                  text: "Sorry, the audio file could not be generated.",
-                });
-              }
+              // if (isAudioGenerated) {
+              //   const audioUrl = `https://${host}/output/audio-${currentWord.id}.mp3`;
+              //   messages.push({
+              //     type: "audio",
+              //     originalContentUrl: audioUrl,
+              //     duration: 10000, // Set default duration to 10 seconds
+              //   } as line.AudioMessage);
+              // } else {
+              //   messages.push({
+              //     type: "text",
+              //     text: "Sorry, the audio file could not be generated.",
+              //   });
+              // }
 
               // Add other messages
               messages.push(
