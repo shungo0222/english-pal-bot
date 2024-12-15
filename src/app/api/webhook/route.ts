@@ -249,7 +249,6 @@ export async function POST(req: NextRequest) {
               );
 
               // Send the reply messages
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               await client.replyMessage({
                 replyToken: event.replyToken,
                 messages: messages as any,
