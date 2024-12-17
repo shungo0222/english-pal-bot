@@ -12,6 +12,7 @@
     "@google-cloud/text-to-speech": "^5.6.0",
     "@line/bot-sdk": "^9.5.0",
     "@notionhq/client": "^2.2.15",
+    "firebase": "^11.1.0",
     "fs": "^0.0.1-security",
     "next": "15.0.3",
     "react": "19.0.0-rc-66855b96-20241106",

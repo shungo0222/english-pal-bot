@@ -9,6 +9,7 @@ import { ButtonLabel, Button } from "../../constants/buttons";
 import { getNextPage } from "../../utils/cacheUtils"; // Temporarily disabled: generateAudioFileViaApi
 import { getIconAndLabel, formatFlexMessage } from "../../utils/generalUtils";
 import { updateMemorizationStatus } from "../../utils/notionUtils";
+import { saveLearningProgress } from "../../utils/firebaseUtils";
 
 // ============================
 // Client Initialization
@@ -285,10 +286,17 @@ export async function POST(req: NextRequest) {
                 // Update Notion page memorization status
                 await updateMemorizationStatus(currentWord.id, userMessage);
                 console.log(`Notion page "${currentWord.properties.phrase}" updated with memorization status: ${userMessage}`);
+
+                // Save learning progress to Firestore
+                await saveLearningProgress(
+                  { pageId: currentWord.id, phrase: currentWord.properties.phrase },
+                  userMessage as "Never Better" | "Good" | "So So" | "Not At All"
+                );
+
                 updateSuccessful = true; // Mark as successful
               } catch (error) {
                 // Log error for debugging
-                console.error(`Failed to update Notion page ${currentWord.id}:`, error);
+                console.error(`Failed to process memorization update or save progress for ${currentWord.id}:`, error);
               }
 
               // Reply to the user based on the update status
