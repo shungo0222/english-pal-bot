@@ -40,12 +40,11 @@ export const cache = {
 
 /**
  * Starts a loading animation in the LINE chat.
- * This function is used internally by `getNextPage` to indicate that data is being fetched from the Notion DB.
  *
  * @param client - Initialized LINE Messaging API client instance
  * @param chatId - LINE user's chat ID
  */
-async function startLoadingAnimation(
+export async function startLoadingAnimation(
   client: line.messagingApi.MessagingApiClient,
   chatId: string
 ): Promise<void> {

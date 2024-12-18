@@ -6,7 +6,7 @@ import { NextRequest, NextResponse } from "next/server";
 import * as line from "@line/bot-sdk";
 import type { NotionPage } from "../../types/notionTypes";
 import { ButtonLabel, Button } from "../../constants/buttons";
-import { getNextPage } from "../../utils/cacheUtils"; // Temporarily disabled: generateAudioFileViaApi
+import { startLoadingAnimation, getNextPage } from "../../utils/cacheUtils"; // Temporarily disabled: generateAudioFileViaApi
 import { getIconAndLabel, formatFlexMessage } from "../../utils/generalUtils";
 import { updateMemorizationStatus } from "../../utils/notionUtils";
 import { saveLearningProgress } from "../../utils/firebaseUtils";
@@ -284,6 +284,24 @@ export async function POST(req: NextRequest) {
               let updateSuccessful = false; // Flag to track success or failure
 
               try {
+                // Ensure chatId exists
+                const chatId = event.source.userId;
+                if (!chatId) {
+                  console.error("Chat ID not found. Cannot fetch the next page.");
+                  await client.replyMessage({
+                    replyToken: event.replyToken,
+                    messages: [
+                      {
+                        type: "text",
+                        text: "Unable to process your request. Chat ID not found.",
+                        quickReply: { items: [Button.Next] },
+                      },
+                    ],
+                  });
+                  return; // Stop further processing
+                }
+                await startLoadingAnimation(client, chatId);
+
                 // Update Notion page memorization status
                 await updateMemorizationStatus(currentWord.id, userMessage);
                 console.log(`Notion page "${currentWord.properties.phrase}" updated with memorization status: ${userMessage}`);
