@@ -232,10 +232,11 @@ export async function POST(req: NextRequest) {
               // }
 
               // Add other messages
+              const altText = currentWord.properties.meaning || "Study Data: No meaning available.";
               messages.push(
                 {
                   type: "flex",
-                  altText: "Study Data: Phrase, Meaning, and Details",
+                  altText: altText,
                   contents: formatFlexMessage(currentWord),
                   quickReply: {
                     items: [
