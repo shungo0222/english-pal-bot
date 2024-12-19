@@ -1,4 +1,5 @@
 import { doc, getDoc, updateDoc, arrayUnion, increment, setDoc, serverTimestamp } from "firebase/firestore";
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "firebase/auth";
 import { firestore } from "../constants/firebaseConfig";
 
 // Helper function to get the date in "YYYY-MM-DD" format
@@ -65,4 +66,34 @@ export async function saveLearningProgress(
     console.error("Error saving learning progress:", error);
     throw new Error("Failed to save learning progress.");
   }
+}
+
+/**
+ * Logs in a user with email and password.
+ * @param email - User's email address.
+ * @param password - User's password.
+ * @returns Promise<void>
+ */
+export async function loginUser(email: string, password: string): Promise<void> {
+  const auth = getAuth();
+  await signInWithEmailAndPassword(auth, email, password);
+}
+
+/**
+ * Logs out the current user.
+ * @returns Promise<void>
+ */
+export async function logoutUser(): Promise<void> {
+  const auth = getAuth();
+  await signOut(auth);
+}
+
+/**
+ * Observes the user's authentication state.
+ * @param callback - Callback function to handle the user's authentication state.
+ * @returns Unsubscribe function
+ */
+export function observeAuthState(callback: (user: any) => void): () => void {
+  const auth = getAuth();
+  return onAuthStateChanged(auth, callback);
 }
