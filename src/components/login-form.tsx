@@ -65,15 +65,7 @@ export function LoginForm({ className, onSubmit, ...props }: LoginFormProps) {
                 <Input id="email" type="email" placeholder="m@example.com" required />
               </div>
               <div className="grid gap-2">
-                <div className="flex items-center">
-                  <Label htmlFor="password">Password</Label>
-                  <a
-                    href="#"
-                    className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
-                  >
-                    Forgot your password?
-                  </a>
-                </div>
+                <Label htmlFor="password">Password</Label>
                 <Input id="password" type="password" required />
               </div>
               <Button type="submit" className="w-full" disabled={isLoading}>
